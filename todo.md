@@ -1,0 +1,2 @@
+- Quoted Identifiers off
+- better error messages
