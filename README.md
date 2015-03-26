@@ -3,7 +3,7 @@ A very simple, fast and easy to read Microsoft Transact SQL lexical analyzer.
 
 Simple to use:
 
-    QString query("SELECT c.[name], \"address\" FROM customer c ;");
+    QString query("SELECT Name, ProductNumber, ListPrice AS Price FROM Production.Product WHERE ProductLine = 'R ORDER BY Name ASC;");
 
     lexer l;
     l.name = "name";
