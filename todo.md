@@ -1,2 +1,4 @@
 - Quoted Identifiers off
 - better error messages
+- naming consistency
+- OO it up :(
