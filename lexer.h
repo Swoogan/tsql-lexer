@@ -5,41 +5,53 @@
 #include <QSharedPointer>
 #include "itemtype.h"
 #include "state.h"
-
-struct item {
-    itemType type;  // Type, such as itemNumber.
-    QString value;  // Value, such as "23.2".
-    int start;      // Position the token starts
-    int end;        // Position the token ends
-    int lineNumber; // Line the token is on
-};
+#include "item.h"
 
 const QChar eof(-1);
 
-struct lexer {
-    lexer();
-
-    QMap<QString, itemType> keywords;
-    QString name;    // used only for error reports.
-    QString input;    // the string being sZeitgeistcanned.
-    int start = 0;       // start position of this item.
-    int pos = 0;       // current position in the input.
-    int width = 1;       // width of last rune read from input.
-    int parenDepth = 0; // depth of the ()
-    QList<item> items; // channel of scanned items.
+class Lexer {
+public:
+    Lexer(QString sql);
+    ~Lexer();
 
     void run();
-    void ignore();
-    void backup();
-    void emitt(itemType t);
+    QChar peek();
     QChar next();
-    QSharedPointer<State> error(QString s, QChar r);
-    QSharedPointer<State> error(QString s);
+    void produce(itemType t);
     bool accept(QString valid);
     void acceptRun(QString valid);
-    QString lexem();
-    QChar peek();
-    int lineNumber();
+    QSharedPointer<State> error(QString s, QChar r);
+    QSharedPointer<State> error(QString s);
+
+    itemType keyword(QString name) const { return keywords[name]; }
+    QString lexem() const { return _input.mid(start, pos - start); }
+    QString clip() const { return _input.mid(pos); }
+    QString input() const { return _input; }
+    int position() const { return pos; }
+    QList<Item> items() const { return _items; }
+    int parenDepth() const { return _parenDepth; }
+    void forward(int x) { pos += x; }
+    void enterParen() { _parenDepth++; }
+    void exitParen() { _parenDepth--; }
+
+    // steps back one character. Can be
+    // called only once per call of next.
+    void backup() { pos -= width; }
+
+private:
+    // ignore skips over the pending input before this point.
+    void ignore() { start = pos; }
+    int lineNumber() const;
+
+    QMap<QString, itemType> keywords;
+    QString name;        // used only for error reports.
+    QString _input;      // the string being sZeitgeistcanned.
+    QList<Item> _items;  // channel of scanned items.
+
+    int start = 0;       // start position of this item.
+    int pos = 0;         // current position in the input.
+    int width = 1;       // width of last rune read from input.
+    int _parenDepth = 0; // depth of the ()
 };
 
 

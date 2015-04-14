@@ -1,8 +1,10 @@
 #include <QCoreApplication>
 #include <QTextStream>
 #include <QDebug>
+
 #include "state.h"
 #include "lexer.h"
+#include "item.h"
 
 
 int main(int argc, char *argv[])
@@ -28,13 +30,11 @@ int main(int argc, char *argv[])
     QTextStream cout(stdout);
     cout << query << endl;
 
-    lexer l;
-    l.name = "name";
-    l.input = query;
-    l.run();
+    Lexer lex(query);
+    lex.run();
 
     cout << "Results: " << endl;
-    foreach (item i, l.items)
+    foreach (Item i, lex.items())
         cout << i.value << ", start: " << i.start << ", end: " << i.end << ", typecode: " << i.type << endl;
 
     return a.exec();

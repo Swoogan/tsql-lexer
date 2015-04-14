@@ -1,7 +1,7 @@
 #include <QDebug>
 #include "lexer.h"
 
-lexer::lexer()
+Lexer::Lexer(QString sql) : _input(sql)
 {
     keywords.insert(QString("add"), itemAdd);
     keywords.insert(QString("all"), itemAll);
@@ -190,65 +190,50 @@ lexer::lexer()
     keywords.insert(QString("writetext"), itemWriteText);
 }
 
-void lexer::emitt(itemType t) {
-    items.append(item{t, lexem(), start, pos, lineNumber()});
+void Lexer::produce(itemType t) {
+    _items.append(Item{t, lexem(), start, pos, lineNumber()});
     start = pos;
 }
 
-QString lexer::lexem() {
-    return input.mid(start, pos - start);
-}
-
 // next returns the next rune in the input.
-QChar lexer::next() {
-    if (pos >= input.length()) {
+QChar Lexer::next() {
+    if (pos >= _input.length()) {
         width = 0;
         return eof;
     }
 
-    QChar rune = input.at(pos);
+    QChar rune = _input.at(pos);
     width = 1;
     pos += width;
     return rune;
 }
 
-// ignore skips over the pending input before this point.
-void lexer::ignore() {
-    start = pos;
-}
-
-// backup steps back one rune.
-// Can be called only once per call of next.
-void lexer::backup() {
-    pos -= width;
-}
-
 // peek returns but does not consume the next rune in the input.
-QChar lexer::peek() {
+QChar Lexer::peek() {
     QChar r = next();
     backup();
     return r;
 }
 
-int lexer::lineNumber()
+int Lexer::lineNumber() const
 {
-    QString scanned = input.mid(0, pos);
+    QString scanned = _input.mid(0, pos);
     return scanned.count("\n") + 1;
 }
 
-QSharedPointer<State> lexer::error(QString s, QChar r){
+QSharedPointer<State> Lexer::error(QString s, QChar r){
     qDebug() << s.arg(r);
     return QSharedPointer<State>();
 }
 
-QSharedPointer<State> lexer::error(QString s){
+QSharedPointer<State> Lexer::error(QString s){
     qDebug() << s;
     return QSharedPointer<State>();
 }
 
 // accept consumes the next rune
 // if it's from the valid set.
-bool lexer::accept(QString valid) {
+bool Lexer::accept(QString valid) {
     if (valid.indexOf(next()) >= 0) {
         return true;
     }
@@ -257,14 +242,14 @@ bool lexer::accept(QString valid) {
 }
 
 // acceptRun consumes a run of runes from the valid set.
-void lexer::acceptRun(QString valid) {
+void Lexer::acceptRun(QString valid) {
     while (valid.indexOf(next()) >= 0) {  }
     backup();
 }
 
 // run lexes the input by executing state functions until
 // the state is nil.
-void lexer::run() {
+void Lexer::run() {
     QSharedPointer<State> state =
             QSharedPointer<LexStatement>(new LexStatement());
     while (!state.isNull()) {

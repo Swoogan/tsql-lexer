@@ -23,7 +23,8 @@ QMAKE_CXXFLAGS += -std=c++11
 HEADERS += \
     state.h \
     lexer.h \
-    itemtype.h
+    itemtype.h \
+    item.h
 
 OTHER_FILES += \
     todo.md
