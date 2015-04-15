@@ -190,6 +190,11 @@ Lexer::Lexer(QString sql) : _input(sql)
     keywords.insert(QString("writetext"), itemWriteText);
 }
 
+Lexer::~Lexer()
+{
+
+}
+
 void Lexer::produce(itemType t) {
     _items.append(Item{t, lexem(), start, pos, lineNumber()});
     start = pos;

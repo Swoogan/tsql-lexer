@@ -32,7 +32,7 @@ QSharedPointer<State> LexIdentifier::Execute(Lexer *lex) {
 
 // Already saw the [ character
 QSharedPointer<State> LexBracketedIdentifier::Execute(Lexer *lex) {
-    const QString valid = "@$#_ ~!%^&()-{}'.\`";
+    const QString valid = "@$#_ ~!%^&()-{}'.\\`";
     for (;;) {
         lex->acceptRun(valid);
         QChar r = lex->next();
@@ -49,7 +49,7 @@ QSharedPointer<State> LexBracketedIdentifier::Execute(Lexer *lex) {
 }
 
 QSharedPointer<State> LexQuotedIdentifier::Execute(Lexer *lex) {
-    const QString valid = "@$#_ ~!%^&()-{}'.\`";
+    const QString valid = "@$#_ ~!%^&()-{}'.\\`";
     for (;;) {
         lex->acceptRun(valid);
         QChar r = lex->next();
