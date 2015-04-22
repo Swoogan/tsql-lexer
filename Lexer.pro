@@ -16,7 +16,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     state.cpp \
-    lexer.cpp
+    lexer.cpp \
+    state_collection.cpp
 
 QMAKE_CXXFLAGS += -std=c++11
 
@@ -24,7 +25,9 @@ HEADERS += \
     state.h \
     lexer.h \
     itemtype.h \
-    item.h
+    item.h \
+    state_type.h \
+    state_collection.h
 
 OTHER_FILES += \
     todo.md

@@ -1,7 +1,7 @@
 #include <QDebug>
 #include "lexer.h"
 
-Lexer::Lexer(QString sql) : _input(sql)
+Lexer::Lexer()
 {
     keywords.insert(QString("add"), itemAdd);
     keywords.insert(QString("all"), itemAll);
@@ -226,14 +226,14 @@ int Lexer::lineNumber() const
     return scanned.count("\n") + 1;
 }
 
-QSharedPointer<State> Lexer::error(QString s, QChar r){
+StateType Lexer::error(QString s, QChar r){
     qDebug() << s.arg(r);
-    return QSharedPointer<State>();
+    return stateEndProcessing;
 }
 
-QSharedPointer<State> Lexer::error(QString s){
+StateType Lexer::error(QString s){
     qDebug() << s;
-    return QSharedPointer<State>();
+    return stateEndProcessing;
 }
 
 // accept consumes the next rune
@@ -254,10 +254,17 @@ void Lexer::acceptRun(QString valid) {
 
 // run lexes the input by executing state functions until
 // the state is nil.
-void Lexer::run() {
-    QSharedPointer<State> state =
-            QSharedPointer<LexStatement>(new LexStatement());
-    while (!state.isNull()) {
-        state = state->Execute(this);
+void Lexer::run(QString sql) {
+    _input = sql;
+    _parenDepth = 0;
+    _items.clear();
+    start = 0;
+    pos = 0;
+    width = 1;
+
+    StateType type = stateLexStatement;
+    while (type != stateEndProcessing) {
+        State *state = states.get(type);
+        type = state->Execute(this);
     }
 }

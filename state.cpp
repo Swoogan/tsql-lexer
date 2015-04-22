@@ -1,7 +1,7 @@
 #include "state.h"
 #include "lexer.h"
 
-QSharedPointer<State> LexIdentifier::Execute(Lexer *lex) {
+StateType LexIdentifier::Execute(Lexer *lex) {
     /*
      * Valid Identifiers:
      * - Starts with Letter
@@ -27,11 +27,11 @@ QSharedPointer<State> LexIdentifier::Execute(Lexer *lex) {
         }
     }
 
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 // Already saw the [ character
-QSharedPointer<State> LexBracketedIdentifier::Execute(Lexer *lex) {
+StateType LexBracketedIdentifier::Execute(Lexer *lex) {
     const QString valid = "@$#_ ~!%^&()-{}'.\\`";
     for (;;) {
         lex->acceptRun(valid);
@@ -45,10 +45,10 @@ QSharedPointer<State> LexBracketedIdentifier::Execute(Lexer *lex) {
     }
 
     lex->produce(itemIdentifier);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
-QSharedPointer<State> LexQuotedIdentifier::Execute(Lexer *lex) {
+StateType LexQuotedIdentifier::Execute(Lexer *lex) {
     const QString valid = "@$#_ ~!%^&()-{}'.\\`";
     for (;;) {
         lex->acceptRun(valid);
@@ -62,11 +62,11 @@ QSharedPointer<State> LexQuotedIdentifier::Execute(Lexer *lex) {
     }
 
     lex->produce(itemIdentifier);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 // Already saw the ' character
-QSharedPointer<State> LexString::Execute(Lexer *lex) {
+StateType LexString::Execute(Lexer *lex) {
     for (;;) {
         QChar r = lex->next();
         if (r == eof || r == '\n')
@@ -81,11 +81,11 @@ QSharedPointer<State> LexString::Execute(Lexer *lex) {
     }
 
     lex->produce(itemVarchar);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 // Already saw N and know a ' character follows
-QSharedPointer<State> LexUnicodeString::Execute(Lexer *lex) {
+StateType LexUnicodeString::Execute(Lexer *lex) {
     lex->next();  // accept the '
 
     for (;;) {
@@ -102,11 +102,11 @@ QSharedPointer<State> LexUnicodeString::Execute(Lexer *lex) {
     }
 
     lex->produce(itemVarchar);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 
-QSharedPointer<State> LexNumber::Execute(Lexer *l) {    
+StateType LexNumber::Execute(Lexer *l) {    
     const QString digits = "0123456789";
     l->acceptRun(digits);
 
@@ -119,20 +119,20 @@ QSharedPointer<State> LexNumber::Execute(Lexer *l) {
     }
 
     l->produce(itemNumber);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
-QSharedPointer<State> LexSpace::Execute(Lexer *l) {
+StateType LexSpace::Execute(Lexer *l) {
     while (l->peek().isSpace()) {
         l->next();
     }
 
     l->produce(itemSpace);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 
-QSharedPointer<State> LexLessThan::Execute(Lexer *l) {
+StateType LexLessThan::Execute(Lexer *l) {
     QChar r = l->next();
     if (r == '>') {
         l->produce(itemNotEqual);
@@ -145,10 +145,10 @@ QSharedPointer<State> LexLessThan::Execute(Lexer *l) {
         l->produce(itemLessThan);
     }
 
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
-QSharedPointer<State> LexExclamation::Execute(Lexer *l) {
+StateType LexExclamation::Execute(Lexer *l) {
     QChar r = l->next();
 
     if (r == '>') {
@@ -165,10 +165,10 @@ QSharedPointer<State> LexExclamation::Execute(Lexer *l) {
         l->produce(itemExclamation);
     }
 
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
-QSharedPointer<State> LexComment::Execute(Lexer *l) {
+StateType LexComment::Execute(Lexer *l) {
     l->accept("-");
     for (;;) {
         QChar r = l->next();
@@ -177,10 +177,10 @@ QSharedPointer<State> LexComment::Execute(Lexer *l) {
     }
 
     l->produce(itemComment);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
-QSharedPointer<State> LexMultiLineComment::Execute(Lexer *lex) {
+StateType LexMultiLineComment::Execute(Lexer *lex) {
     QString current = lex->clip();
 
     int i = current.indexOf("*/");
@@ -189,19 +189,19 @@ QSharedPointer<State> LexMultiLineComment::Execute(Lexer *lex) {
 
     lex->forward(i + 2); // move past the '*/' ... not sure if this is unicode safe
     lex->produce(itemComment);
-    return QSharedPointer<LexStatement>(new LexStatement());
+    return stateLexStatement;
 }
 
 /*
  * If quoted identifiers is off, strings can be in quotes: http://technet.microsoft.com/en-us/library/aa224033(v=sql.80).aspx
  */
-QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
+StateType LexStatement::Execute(Lexer *lex) {
     for(;;) {
         QChar r = lex->next();
         if (r == eof)
             break;
         if (r.isSpace())
-            return QSharedPointer<LexSpace>(new LexSpace());
+            return stateLexSpace;
         else if (r == '*')
             CheckForEquals(lex, itemMutilpyEqual, itemAsterisk);
         else if (r == ';')
@@ -238,9 +238,9 @@ QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
         else if (r == '>')
             CheckForEquals(lex, itemGreaterThanOrEqual, itemGreaterThan);
         else if (r == '!')
-            return QSharedPointer<LexExclamation>(new LexExclamation());
+            return stateLexExclamation;
         else if (r == '<')
-            return QSharedPointer<LexLessThan>(new LexLessThan());
+            return stateLexLessThan;
         else if (r == ']')
             return lex->error("Unexpected right bracket");
         else if (r == '/') {
@@ -249,7 +249,7 @@ QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
                 lex->produce(itemDivideEqual);
             }
             else if (r == '*') {
-                return QSharedPointer<LexMultiLineComment>(new LexMultiLineComment());
+                return stateLexMultiLineComment;
             }
             else {
                 lex->backup();
@@ -260,16 +260,16 @@ QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
             r = lex->peek();
             if (r == '-') {
                 lex->backup();
-                return QSharedPointer<LexComment>(new LexComment());
+                return stateLexComment;
             }
             else {
                 lex->produce(itemMinus);
             }
         }
         else if (r == '[')
-            return QSharedPointer<LexBracketedIdentifier>(new LexBracketedIdentifier());
+            return stateLexBracketedIdentifier;
         else if (r == '"')
-            return QSharedPointer<LexQuotedIdentifier>(new LexQuotedIdentifier());
+            return stateLexQuotedIdentifier;
         else if (r == ':') {
             r = lex->next();
             if (r != ':')
@@ -278,21 +278,19 @@ QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
             lex->produce(itemScopeResolution);
         }
         else if (r == '\'')
-            return QSharedPointer<LexString>(new LexString());
+            return stateLexString;
         else if (r == 'N') {
             if (lex->peek() == '\'') {
-                return QSharedPointer<LexUnicodeString>(new LexUnicodeString());
+                return stateLexUnicodeString;
             }
-
-            return QSharedPointer<LexIdentifier>(new LexIdentifier());
-
+            return stateLexIdentifier;
         }
         else if (r.isLetter() || r == '@' || r == '#' || r == '_') {
-            return QSharedPointer<LexIdentifier>(new LexIdentifier());
+            return stateLexIdentifier;
         }
         else if (r.isDigit()) {
             lex->backup();
-            return QSharedPointer<LexNumber>(new LexNumber());
+            return stateLexNumber;
         }
         else
             return lex->error("Unknown token: %1", r);
@@ -302,7 +300,7 @@ QSharedPointer<State> LexStatement::Execute(Lexer *lex) {
         return lex->error("Unclosed left paren");
 
     lex->produce(itemEOF);  // Useful to make EOF a token.
-    return QSharedPointer<State>();       // Stop the run loop.
+    return stateEndProcessing;       // Stop the run loop.
 }
 
 void LexStatement::CheckForEquals(Lexer *lex, itemType with, itemType without) {
