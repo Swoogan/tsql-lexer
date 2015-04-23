@@ -15,7 +15,8 @@ enum StateType {
     stateLexString,
     stateLexUnicodeString,
     stateLexIdentifier,
-    stateLexNumber
+    stateLexNumber,
+    stateError
 };
 
 #endif // STATE_TYPE_H

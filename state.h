@@ -2,7 +2,7 @@
 #define STATE_H
 
 #include <QSharedPointer>
-#include "itemtype.h"
+#include "item_type.h"
 #include "state_type.h"
 
 class Lexer;
@@ -14,7 +14,7 @@ struct State {
 
 struct LexStatement : public State {
     StateType Execute(Lexer *lex);
-    void CheckForEquals(Lexer *lex, itemType with, itemType without);
+    void CheckForEquals(Lexer *lex, ItemType with, ItemType without);
 };
 
 struct SelectStatement : public State {

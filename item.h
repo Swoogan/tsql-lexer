@@ -2,11 +2,11 @@
 #define ITEM_H
 
 #include <QString>
-#include "itemtype.h"
+#include "item_type.h"
 
 struct Item
 {
-    itemType type;  // Type, such as itemNumber.
+    ItemType type;  // Type, such as itemNumber.
     QString value;  // Value, such as "23.2".
     int start;      // Position the token starts
     int end;        // Position the token ends

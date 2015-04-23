@@ -37,7 +37,7 @@ StateType LexBracketedIdentifier::Execute(Lexer *lex) {
         lex->acceptRun(valid);
         QChar r = lex->next();
         if (r == eof || r == '\n')
-            return lex->error("Unterminated quoted identifier %1", r);
+            return lex->setError("Unterminated quoted identifier");
         else if (r.isLetterOrNumber())
             continue;
         else if (r == ']')
@@ -54,7 +54,7 @@ StateType LexQuotedIdentifier::Execute(Lexer *lex) {
         lex->acceptRun(valid);
         QChar r = lex->next();
         if (r == eof || r == '\n')
-            return lex->error("Unterminated quoted identifier %1", r);
+            return lex->setError("Unterminated quoted identifier");
         else if (r.isLetterOrNumber())
             continue;
         else if (r == '"')
@@ -70,7 +70,7 @@ StateType LexString::Execute(Lexer *lex) {
     for (;;) {
         QChar r = lex->next();
         if (r == eof || r == '\n')
-            return lex->error("Unterminated quoted varchar %1", r);
+            return lex->setError("Unterminated quoted varchar");
         else if (r == '\'') {
             r = lex->next();
             if (r != '\'') {
@@ -91,7 +91,7 @@ StateType LexUnicodeString::Execute(Lexer *lex) {
     for (;;) {
         QChar r = lex->next();
         if (r == eof || r == '\n')
-            return lex->error("Unterminated quoted varchar %1", r);
+            return lex->setError("Unterminated quoted varchar");
         else if (r == '\'') {
             r = lex->next();
             if (r != '\'') {
@@ -185,7 +185,7 @@ StateType LexMultiLineComment::Execute(Lexer *lex) {
 
     int i = current.indexOf("*/");
     if (i < 0)
-        return lex->error("Unclosed comment");
+        return lex->setError("Unclosed comment");
 
     lex->forward(i + 2); // move past the '*/' ... not sure if this is unicode safe
     lex->produce(itemComment);
@@ -200,6 +200,7 @@ StateType LexStatement::Execute(Lexer *lex) {
         QChar r = lex->next();
         if (r == eof)
             break;
+
         if (r.isSpace())
             return stateLexSpace;
         else if (r == '*')
@@ -220,7 +221,7 @@ StateType LexStatement::Execute(Lexer *lex) {
             lex->produce(itemRParen);
             lex->exitParen();
             if (lex->parenDepth() < 0) {
-                return lex->error("Unexpected right paren %1", r);
+                return lex->setError("Unexpected right paren %1", r);
             }
         }
         else if (r == '+')
@@ -242,7 +243,7 @@ StateType LexStatement::Execute(Lexer *lex) {
         else if (r == '<')
             return stateLexLessThan;
         else if (r == ']')
-            return lex->error("Unexpected right bracket");
+            return lex->setError("Unexpected right bracket");
         else if (r == '/') {
             QChar r = lex->next();
             if (r == '=') {
@@ -273,7 +274,7 @@ StateType LexStatement::Execute(Lexer *lex) {
         else if (r == ':') {
             r = lex->next();
             if (r != ':')
-                return lex->error("Expected ::");
+                return lex->setError("Expected ::");
 
             lex->produce(itemScopeResolution);
         }
@@ -293,17 +294,17 @@ StateType LexStatement::Execute(Lexer *lex) {
             return stateLexNumber;
         }
         else
-            return lex->error("Unknown token: %1", r);
+            return lex->setError("Unknown token: %1", r);
     }
 
     if (lex->parenDepth() > 0)
-        return lex->error("Unclosed left paren");
+        return lex->setError("Unclosed left paren");
 
     lex->produce(itemEOF);  // Useful to make EOF a token.
     return stateEndProcessing;       // Stop the run loop.
 }
 
-void LexStatement::CheckForEquals(Lexer *lex, itemType with, itemType without) {
+void LexStatement::CheckForEquals(Lexer *lex, ItemType with, ItemType without) {
     QChar r = lex->next();
     if (r == '=')
         lex->produce(with);

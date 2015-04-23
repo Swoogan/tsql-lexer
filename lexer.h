@@ -2,11 +2,11 @@
 #define LEXER_H
 
 #include <QMap>
-#include <QSharedPointer>
-#include "itemtype.h"
+#include "item_type.h"
 #include "state.h"
 #include "item.h"
 #include "state_collection.h"
+#include "lexer_error.h"
 
 const QChar eof(-1);
 
@@ -15,44 +15,48 @@ public:
     Lexer();
     ~Lexer();
 
-    void run(QString sql);
+    bool run(QString sql);
     QChar peek();
     QChar next();
-    void produce(itemType t);
+    void produce(ItemType t);
     bool accept(QString valid);
     void acceptRun(QString valid);
-    StateType error(QString s, QChar r);
-    StateType error(QString s);
+    StateType setError(const QString &s, const QChar &r);
+    StateType setError(const QString &msg);
 
-    itemType keyword(QString name) const { return keywords[name]; }
-    QString lexem() const { return _input.mid(start, pos - start); }
-    QString clip() const { return _input.mid(pos); }
+    ItemType keyword(QString name) const { return _keywords[name]; }
+    QString lexem() const { return _input.mid(_start, _pos - _start); }
+    QString clip() const { return _input.mid(_pos); }
     QString input() const { return _input; }
-    int position() const { return pos; }
+    int position() const { return _pos; }
     QList<Item> items() const { return _items; }
     int parenDepth() const { return _parenDepth; }
-    void forward(int x) { pos += x; }
+    LexerError error() const { return _error; }
+    int lineNumber() const;
+    int column() const;
+    void forward(int x) { _pos += x; }
     void enterParen() { _parenDepth++; }
     void exitParen() { _parenDepth--; }
 
     // steps back one character. Can be
     // called only once per call of next.
-    void backup() { pos -= width; }
+    void backup() { _pos -= _width; }
 
 private:
     // ignore skips over the pending input before this point.
-    void ignore() { start = pos; }
-    int lineNumber() const;
+    void ignore() { _start = _pos; }
 
-    StateCollection states;
-    QMap<QString, itemType> keywords;
-    QString name;        // used only for error reports.
+
+    StateCollection _states;
+    QMap<QString, ItemType> _keywords;
+    QString _name;        // used only for error reports.
     QString _input;      // the string being sZeitgeistcanned.
     QList<Item> _items;  // channel of scanned items.
+    LexerError _error;
 
-    int start;       // start position of this item.
-    int pos;         // current position in the input.
-    int width;       // width of last rune read from input.
+    int _start;       // start position of this item.
+    int _pos;         // current position in the input.
+    int _width;       // width of last rune read from input.
     int _parenDepth; // depth of the ()
 };
 

@@ -2,7 +2,7 @@
 #define ITEMTYPE_H
 
 
-enum itemType {
+enum ItemType {
     itemError,
     itemEOF,
 

@@ -17,17 +17,21 @@ TEMPLATE = app
 SOURCES += main.cpp \
     state.cpp \
     lexer.cpp \
-    state_collection.cpp
+    state_collection.cpp \
+    keywords.cpp \
+    lexer_error.cpp
 
 QMAKE_CXXFLAGS += -std=c++11
 
 HEADERS += \
     state.h \
     lexer.h \
-    itemtype.h \
     item.h \
     state_type.h \
-    state_collection.h
+    state_collection.h \
+    lexer_error.h \
+    keywords.h \
+    item_type.h
 
 OTHER_FILES += \
     todo.md
